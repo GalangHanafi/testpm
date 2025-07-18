@@ -15,6 +15,8 @@ def cetakstruk():
     print(re)
 
     if re['success']:
+        buka_palang()
+
         print("cetakstruk")
         Epson = File("/dev/usb/lp0")
         Epson.text("\x1b\x45\x00") # font normal
@@ -46,20 +48,20 @@ def cetakstruk():
         Epson.close()
         
         print("sudah cetak")
-        return True
+    
+
     
 def buka_palang():
     print("buka palang")
-    GPIO.output(18, GPIO.HIGH)
-    time.sleep(5)
+    GPIO.output(18, 1)
+    time.sleep(1)
     print("tutup palang")
-    GPIO.output(18, GPIO.LOW)
+    GPIO.output(18, 0)
 
 while True:
     try:
-        if cetakstruk():
-            buka_palang()
-        
+        cetakstruk()
+
     except KeyboardInterrupt:
         print("Keluar program")
         GPIO.cleanup()

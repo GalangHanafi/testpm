@@ -51,6 +51,7 @@ def cetak_qr(kode, barcode, waktu, harga, jenisk):
     Epson.text(f"Tarif : Rp.{harga}\n")
     Epson.cut()
     Epson.close()
+    print(f"Tarif : Rp.{harga}\n")
 
 def insert_masuk(kode, waktu, jenis, bcd):
     url = "http://192.168.1.88:8000/dutaparkir/insertMasuk.php"
@@ -92,7 +93,7 @@ def call_tombol(channel):
 
         # print(f"Jenis kendaraan: {JENIS_KENDARAAN}")
 
-        payload = 'jenisk=RODA%204'
+        payload = f'jenisk={JENIS_KENDARAAN}'
         headers = {
         'Content-Type': 'application/x-www-form-urlencoded'
         }
