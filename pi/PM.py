@@ -179,14 +179,14 @@ def simpan_gambar():
 
 # ---------------- MAIN LOOP ----------------
 
-call_tombol(12)
+# call_tombol(12)
 
 try:
     for pin in INPUT_PINS:
-        GPIO.add_event_detect(pin, GPIO.FALLING, callback=call_tombol, bouncetime=150)
+        GPIO.add_event_detect(pin, GPIO.FALLING, callback=call_tombol, bouncetime=250)
 
     while True:
-        time.sleep(1000)
+        time.sleep(1)
 
 except KeyboardInterrupt:
     print("Keluar program")

@@ -1,8 +1,6 @@
 <?php
 require 'connect.php'; // Ensure this file establishes $con and handles database connection errors
 
-date_default_timezone_set('Asia/Jakarta');
-
 $now = date('Y-m-d H:i:s');
 
 header('Content-type: application/json');

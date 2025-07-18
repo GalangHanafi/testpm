@@ -1,8 +1,6 @@
 <?php
 include('connection.php');
 
-date_default_timezone_set('Asia/Jakarta');
-
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(
@@ -36,8 +34,8 @@ $bcd = $_POST['bcd'];
 
 // $query = mysqli_query($con, $query);
 
-$stmt = $con->prepare("INSERT INTO masuk (kode, waktu, jenis, bcd) VALUES (?, ?, ?, ?)");
-$stmt->bind_param("ssis", $kode, $waktu, $jenis, $bcd);
+$stmt = $con->prepare("INSERT INTO masuk (kode, waktu, jenisk, bcd) VALUES (?, ?, ?, ?)");
+$stmt->bind_param("ssss", $kode, $waktu, $jenis, $bcd);
 $stmt->execute();
 
 echo json_encode([

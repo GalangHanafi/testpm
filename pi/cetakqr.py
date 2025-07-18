@@ -9,14 +9,13 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 
 def cetakstruk():
-    print("cetakstruk")
-    response = requests.get('http://192.168.1.88:8000/dutaparkir/cekbayar__.php')
+    response = requests.get('http://192.168.1.88:8000/dutaparkir/cekbayar.php')
     print(response)
     re = (response.json()) 
     print(re)
 
-    if re['status']=='200':
-      
+    if re['success']:
+        print("cetakstruk")
         Epson = File("/dev/usb/lp0")
         Epson.text("\x1b\x45\x00") # font normal
         Epson.text("\x1b\x21\x00") # text normal
@@ -26,12 +25,12 @@ def cetakstruk():
         Epson.text("\x1b\x61\x01")
         Epson.text("UPT PELABUHAN PENAJAM BULUMINUNG\n")
         Epson.text("Jalan Kapo, Kel Gunung Seteleng, Penajam\n\n")
-        jenisk = re['jenisk']
+        jenisk = re['data']['jenisk']
         Epson.text(jenisk)
         
         Epson.text('\n')
         Epson.text('Rp.')
-        tarif= re['amount']
+        tarif= re['data']['amount']
         Epson.text(tarif)
         Epson.text(',-')
         Epson.text('\n\n')
@@ -39,30 +38,37 @@ def cetakstruk():
         Epson.text("\x1b\x21\x00") # text normal
         Epson.text("\x1b\x4d\x01") #tipe font b
         Epson.text('Kode Transaksi: ')
-        Epson.text(re['kode'])
+        Epson.text(re['data']['kode'])
         Epson.text('\n Waktu: ')
-        Epson.text(re['waktu'])
+        Epson.text(re['data']['waktu'])
         
         Epson.cut()
         Epson.close()
         
+        print("sudah cetak")
         return True
     
 def buka_palang():
+    print("buka palang")
     GPIO.output(18, GPIO.HIGH)
-    time.sleep(1000)
+    time.sleep(5)
+    print("tutup palang")
     GPIO.output(18, GPIO.LOW)
 
 while True:
-    time.sleep(1)
     try:
-        cetakstruk = cetakstruk()
-        if cetakstruk:
+        if cetakstruk():
             buka_palang()
         
     except KeyboardInterrupt:
         print("Keluar program")
         GPIO.cleanup()
-    except:
+    except Exception as e:
+        print("===================================================")
         print('error')
+        print("===================================================")
+        print(e)
+        GPIO.cleanup()
+
+    time.sleep(5)
   

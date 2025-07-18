@@ -19,7 +19,7 @@ if($dataMasuk['is_in'] == 1){
 }
 
 // get qris
-$dataQris = "SELECT * FROM qris where kode_tagihan = '$kodeQris'";
+$dataQris = "SELECT * FROM qris where kode_tagihan = '$kodeQris' ORDER BY time DESC LIMIT 1";
 $dataQris = mysqli_query($con, $dataQris);
 $dataQris = mysqli_fetch_assoc($dataQris);
 
@@ -42,8 +42,9 @@ echo json_encode([
     "success" => true,
     "message" => "Pembayaran sudah dilakukan",
     "data" => [
-        "kode" => $datamasuk['kode'],
+        "kode" => $dataMasuk['kode'],
         "amount" => $dataQris['amount'],
-        "waktu" => $datamasuk['waktu'],
+        "jenisk" => $dataMasuk['jenisk'],
+        "waktu" => $dataMasuk['waktu'],
     ]
 ]);
