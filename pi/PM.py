@@ -67,8 +67,13 @@ def insert_masuk(kode, waktu, jenis, bcd):
     print("================================")
 
 def call_tombol(channel):
-    print('dalam coba')
     global TOMBOL_AKTIF, JENIS_KENDARAAN, QRIS_ID
+
+    if (TOMBOL_AKTIF):
+        return
+
+    TOMBOL_AKTIF = 1
+    print('dalam coba')
 
     jenis_map = {
         12: 'RODA 4',
@@ -144,6 +149,8 @@ def call_tombol(channel):
     # except Exception as e:
     #     print("Error saat mengambil QRIS:", e)
     print("akhir coba")
+
+    TOMBOL_AKTIF = 0
 
 def cek_pembayaran():
     global QRIS_ID, JENIS_KENDARAAN, TOMBOL_AKTIF

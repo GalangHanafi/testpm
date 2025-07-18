@@ -1,5 +1,5 @@
 <?php
-require 'connect.php'; // Ensure this file establishes $con and handles database connection errors
+include('connection.php');
 
 $now = date('Y-m-d H:i:s');
 
