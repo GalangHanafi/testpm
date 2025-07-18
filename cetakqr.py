@@ -3,13 +3,16 @@ from escpos.printer import File
 import json
 import requests
 import time
+import RPi.GPIO as GPIO
 
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(18, GPIO.OUT, initial=GPIO.LOW)
 
 def cetakstruk():
-
-    response = requests.get('https://apikaltimtara.adminparkir.web.id/hasil.php')
-    re = (response.json())
-    
+    print("cetakstruk")
+    response = requests.get('http://192.168.1.88:8000/dutaparkir/cekbayar__.php')
+    print(response)
+    re = (response.json()) 
     print(re)
 
     if re['status']=='200':
@@ -42,10 +45,24 @@ def cetakstruk():
         
         Epson.cut()
         Epson.close()
+        
+        return True
+    
+def buka_palang():
+    GPIO.output(18, GPIO.HIGH)
+    time.sleep(1000)
+    GPIO.output(18, GPIO.LOW)
+
 while True:
-  time.sleep(1)
-  try:
-    cetakstruk()
-  except:
-    print('error')
+    time.sleep(1)
+    try:
+        cetakstruk = cetakstruk()
+        if cetakstruk:
+            buka_palang()
+        
+    except KeyboardInterrupt:
+        print("Keluar program")
+        GPIO.cleanup()
+    except:
+        print('error')
   

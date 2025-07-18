@@ -20,8 +20,8 @@ iplokal = a.ipaddr("eth0")
 QRIS_ID = ""
 JENIS_KENDARAAN = ""
 TOMBOL_AKTIF = 0
-K_IPCAMERA = "192.168.1.100"  # ganti sesuai IP camera
-K_IPSERVER = "apikaltimtara.adminparkir.web.id"
+K_IPCAMERA = "192.168.1.111"  # ganti sesuai IP camera
+K_IPSERVER = "192.168.1.88"
 
 # ---------------- SETUP ----------------
 GPIO.setmode(GPIO.BCM)
@@ -38,14 +38,6 @@ SOUND_TOMBOL.play()
 print("Suara tombol diputar")
 
 # ---------------- FUNGSI ----------------
-def ambil_token():
-    for endpoint in ["Auth.php", "Auth-b2b.php"]:
-        try:
-            response = requests.get(f"https://{K_IPSERVER}/{endpoint}")
-            print(f"Token response ({endpoint}):", response.text)
-        except Exception as e:
-            print(f"Token Error ({endpoint}):", e)
-
 def cetak_qr(kode, barcode, waktu, harga, jenisk):
     Epson = File("/dev/usb/lp0")
     Epson.text("\x1b\x45\x00\x1b\x21\x00\x1b\x4d\x01\x1b\x21\x10\x1b\x61\x01")
@@ -59,11 +51,24 @@ def cetak_qr(kode, barcode, waktu, harga, jenisk):
     Epson.cut()
     Epson.close()
 
-def call_tombol(channel):
-    global TOMBOL_AKTIF, JENIS_KENDARAAN, QRIS_ID
+def insert_masuk(kode, waktu, jenis, bcd):
+    url = "http://192.168.1.88:8000/dutaparkir/insertMasuk.php"
 
-    if TOMBOL_AKTIF:
-        return
+    payload = f'kode={kode}&waktu={waktu}&jenis={jenis}&bcd={bcd}'
+    headers = {
+    'Content-Type': 'application/x-www-form-urlencoded'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+
+    print("================================")
+    print("insertMasuk: ", response)
+    print(response.text)
+    print("================================")
+
+def call_tombol(channel):
+    print('dalam coba')
+    global TOMBOL_AKTIF, JENIS_KENDARAAN, QRIS_ID
 
     jenis_map = {
         12: 'RODA 4',
@@ -74,62 +79,85 @@ def call_tombol(channel):
         27: 'FORKLIFT'
     }
 
-    for pin, jenis in jenis_map.items():
-        if GPIO.input(pin) == 0:
-            JENIS_KENDARAAN = jenis
-            break
+    if channel in jenis_map:
+        TOMBOL_AKTIF = 1
+        JENIS_KENDARAAN = jenis_map[channel]
     else:
-        return
+        print("Channel tidak dikenal")
+        return  # keluar dari fungsi
 
     print(f"Jenis kendaraan: {JENIS_KENDARAAN}")
 
-    try:
-        tarif_response = requests.post(
-            f"https://{K_IPSERVER}/cektarif.php",
-            data={'jenisk': JENIS_KENDARAAN},
-            timeout=5
-        )
-        tarif_data = tarif_response.json()
+    payload = 'jenisk=RODA%204'
+    headers = {
+    'Content-Type': 'application/x-www-form-urlencoded'
+    }
 
-        if tarif_data['status'] == '200':
-            kode = tarif_data['kode']
-            waktu = tarif_data['waktu']
-            harga = int(tarif_data['tarif'])
+    #  CEK TARIF
+    response = requests.request("POST", "http://192.168.1.88:8000/dutaparkir/cektarif.php", headers=headers, data=payload)
+    print("=================")
+    print("cektarif: ", response)
+    print("=================")
+    tarif_data = response.json()
 
-            qris_response = requests.post(
-                f"https://{K_IPSERVER}/Qris-req.php",
-                data={'kode': kode, 'amount': harga, 'jenisk': JENIS_KENDARAAN},
-                timeout=9
-            )
-            qris_data = qris_response.json()
+    print(f"Tarif data: {tarif_data}")
 
-            if not qris_data.get('success'):
-                ambil_token()
-                qris_response = requests.post(
-                    f"https://{K_IPSERVER}/Qris-req.php",
-                    data={'kode': kode, 'amount': harga, 'jenisk': JENIS_KENDARAAN},
-                    timeout=9
-                )
-                qris_data = qris_response.json()
+    # try:
+    if tarif_data['status'] == 200:
+        kode = tarif_data['kode']
+        waktu = tarif_data['waktu']
+        harga = int(tarif_data['tarif'])
+        harga = int(harga)
+        payload = {
+            'kode': kode,
+            'amount': harga
+        }
+        headers = {
+        'Content-Type': 'application/x-www-form-urlencoded'
+        }
+        
+        print("===============")
+        print("payload", payload)
+        print("===============")
 
-            barcode = qris_data['data']['barcode']
-            QRIS_ID = qris_data['data']['qris_id']
+        response = requests.request("POST", "http://192.168.1.88:8000/dutaparkir/QRIS/Qris-req.php", headers=headers, data=payload)
+        print("========================")
+        print("qris-req: ", response)
+        print("========================")
+        qris_data = response.json()
+        
+        print("======================")
+        print("qris-data: ", qris_data)
+        barcode = qris_data['data']['barcode']
+        QRIS_ID = qris_data['data']['kode']
+        
+        print("===============================")
+        print("barcode: ", barcode)
+        print("QRIS_ID: ", QRIS_ID)
+        print("===============================")
 
-            cetak_qr(kode, barcode, waktu, harga, JENIS_KENDARAAN)
-            SOUND_MASUK.play()
-            TOMBOL_AKTIF = 1
-    except Exception as e:
-        print("Error saat mengambil tarif atau QRIS:", e)
+        cetak_qr(kode, barcode, waktu, harga, JENIS_KENDARAAN)
+        SOUND_MASUK.play()
+
+        insert_masuk(kode, waktu, JENIS_KENDARAAN, QRIS_ID)
+            # TOMBOL_AKTIF = 1
+    # except Exception as e:
+    #     print("Error saat mengambil QRIS:", e)
+    print("akhir coba")
 
 def cek_pembayaran():
     global QRIS_ID, JENIS_KENDARAAN, TOMBOL_AKTIF
 
     try:
-        response = requests.post(
-            "http://localhost:8000/dutaparkir/cekbayar.php",
-            data={'jenis': JENIS_KENDARAAN, 'qris_id': QRIS_ID},
-            timeout=3
-        )
+        payload = f'jenis={JENIS_KENDARAAN}&qris_id={QRIS_ID}'
+        headers = {
+        'Content-Type': 'application/x-www-form-urlencoded'
+        }
+
+        response = requests.request("POST", "http://192.168.1.88:8000/dutaparkir/cekbayar.php", headers=headers, data=payload)
+        print("================================")
+        print("cekbayar: ", response)
+        print("================================")
         result = response.json()
 
         if result.get("success") == True:
@@ -150,19 +178,14 @@ def simpan_gambar():
         print("Kamera bermasalah:", e)
 
 # ---------------- MAIN LOOP ----------------
+
+call_tombol(12)
+
 try:
     for pin in INPUT_PINS:
         GPIO.add_event_detect(pin, GPIO.FALLING, callback=call_tombol, bouncetime=150)
 
     while True:
-        sudah_bayar = cek_pembayaran()
-        if sudah_bayar:
-            print("Bayar sukses, buka pintu!")
-            GPIO.output(18, GPIO.HIGH)
-            time.sleep(1000)
-            GPIO.output(18, GPIO.LOW)
-            TOMBOL_AKTIF = 0
-        # simpan_gambar()
         time.sleep(1000)
 
 except KeyboardInterrupt:

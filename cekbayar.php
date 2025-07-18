@@ -75,9 +75,10 @@ echo json_encode(
         "success" => true,
         "message" => "Pembayaran Sudah dilakukan, data masuk berhasil ditambahkan",
         "data" => [
-            "code" => $code,
+            "kode" => $code,
             "waktu" => $now,
             "jenis" => $jenis,
+            "amount" => $qris['amount'],
             "foto" => null,
             "qris_id" => $qris_id
         ]
