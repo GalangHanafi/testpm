@@ -33,7 +33,7 @@ def callback_manual_qris(qris_id: str) -> None:
         print("❌ Gagal callback qris: ", e)
 
 
-def call_tombol(channel) -> None:
+def call_tombol(channel: int) -> None:
     global IS_PRESSED
     print("tombol ditekan")
     
