@@ -7,16 +7,8 @@ import RPi.GPIO as GPIO
 import signal
 
 # GLOBAL VARIABLE
-is_pressed = 0
+IS_PRESSED = 0
 INPUT_PINS = [12, 16, 17, 20, 21, 27]
-JENIS_MAP = {
-    12: 'RODA 4',
-    16: 'CRANE /ALATBERAT BAN KARET',
-    17: 'ALAT BERAT BAN RANTAI',
-    20: 'TRUK TRAILER',
-    21: 'RODA 6/LEBIH',
-    27: 'FORKLIFT'
-}
 
 def get_unpaid_qris() -> dict | None:
     url = "26.46.181.23:8000/dutaparkir/getunpaidqris.php"
@@ -42,18 +34,18 @@ def callback_manual_qris(qris_id: str) -> None:
 
 
 def call_tombol(channel) -> None:
-    global is_pressed
+    global IS_PRESSED
     print("tombol ditekan")
     
-    is_pressed = 1
-    if is_pressed:
+    IS_PRESSED = 1
+    if IS_PRESSED:
         return
 
-    while is_pressed:
+    while IS_PRESSED:
         unpaid_qris = get_unpaid_qris()
 
         if not unpaid_qris:
-            is_pressed = 0
+            IS_PRESSED = 0
 
         for qris in unpaid_qris:
             callback_manual_qris(qris['id_tagihan'])
