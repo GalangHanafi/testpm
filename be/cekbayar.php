@@ -46,10 +46,8 @@ if (!$dataMasuk) {
     exit;
 }
 
-// Update status is_in di tabel masuk
+// Update status is_in di tabel masuk dan qris
 $updateMasuk = mysqli_query($con, "UPDATE masuk SET is_in = 1 WHERE kode = '$kode'");
-
-// Update status is_in di tabel qris
 $updateQris = mysqli_query($con, "UPDATE qris SET is_in = 1 WHERE kode_tagihan = '$kode'");
 
 // Berhasil
